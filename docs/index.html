@@ -1,0 +1,260 @@
+<!-- 
+Document parsed with Kramdown: https://kramdown.gettalong.org/
+Plots made with plot.ly: https://plot.ly/javascript/
+Stylesheet from https://thomasf.github.io/solarized-css/
+Magnifier from https://github.com/okfocus/okzoom
+Kramdown tips from https://about.gitlab.com/2016/07/19/markdown-kramdown-tips-and-tricks/
+-->
+
+<!-- Scripts -->
+<script src="controlAnimate.js"></script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<script type="text/javascript" src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script type="text/javascript" src="./scripts/okzoom.js"></script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script src="https://threejs.org/build/three.min.js"></script>
+
+<script id="long" src="./src/lib/loader-support.js"></script>
+
+<script id="long" src="./src/lib/three-obj-loader-2-poly.js"></script>
+
+<script id="long" src="./src/lib/three-orbit-controls.js"></script>
+
+<script src="./src/lib/renderer/rendererCryEngine.js" type="module"></script>
+
+<script src="./src/lib/renderer/rendererStarCraftEngine.js" type="module"></script>
+
+<script src="./src/lib/renderer/rendererHorizonBased.js" type="module"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+
+<!--OKZoom settings -->
+<script>
+$(function(){
+  $('.zoom-img').okzoom({
+    width: 150,
+    height: 150,
+    scaleWidth: 4000,
+  });
+});
+</script>
+
+<!-- Stylesheets and CSS -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css" />
+
+<link href="./stylesheets/solarized-dark.css" rel="stylesheet" />
+
+<style>
+
+.center-wrapper {
+    text-align: center;
+    margin: 1em;
+}
+
+.graph-div
+{
+    margin: 0 auto;
+    width: 100%;
+    height: 40%;
+}
+
+.center-img-small
+{
+    width: 45%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.center-img-big
+{
+    width: 95%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.center-img
+{
+    width: 65%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.demo-frame
+{
+    width: 80%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.caption
+{
+    text-align: center;
+    font-style: italic;
+}
+
+.warning
+{
+    color: gold;
+}
+
+.error
+{
+    color: red;
+}
+
+.interesting
+{
+    color: DarkSeaGreen;
+}
+</style>
+
+<!-- HTML -->
+
+<title>Final Report</title>
+
+<h1 id="cs-184-computer-graphics-and-imaging-spring-2018">CS 184: Computer Graphics and Imaging, Spring 2018</h1>
+
+<h2 id="final-report-slideshttpssaofinalslidesyitengme-videohttpssaofinalvideoyitengme">Final Report (<a href="http://ssaofinalslides.yiteng.me/">Slides</a>, <a href="http://ssaofinalvideo.yiteng.me/">Video</a>)</h2>
+
+<ul class="warning">
+  <li>Slides are only visible on Google accounts with a <code>.berkeley.edu</code> domain.</li>
+</ul>
+
+<ul class="warning">
+  <li>You must have WebGL to view this webpage.</li>
+</ul>
+
+<ul class="error">
+  <li>For performance reasons, scenes are being rendered at a lower resolution. This might result in minor resolution-based artifacts.</li>
+</ul>
+
+<h3 id="abstract">Abstract</h3>
+
+<p>In a typical scene, indirect illumination is too computationally expensive to calculate in real time. While ray-tracing applications have the benefit of long rendering times to calculate the effect of multiple bounces of light, real time applications must find shortcuts to approximate these effects. Blinn-Phong shading attempts this by applying a constant illumination to all fragments in a scene, ensuring that no surfaces are left in complete darkness. However, the results of this appear quite unnatural, in the real world, surfaces that are surrounded by other objects tend to be darker. For example, if we viewed the corner of a room, Blinn-Phong ambient lighting would light both walls uniformly all the way to the corner. But in the real world, we can see that there should be a noticeable shadow around that corner. It seems that we could do much to improve this ambient lighting by somehow imitating this real world effect. SSAO is a method designed just for this purpose. At each fragment, SSAO performs tests to estimate what portion of its surroundings are obscured, or occluded, by other geometry. The more occluded a region is, the darker the ambient lighting at that sample should be. SSAO is widely used in real-time applications like video games, and has a subtle effect which can dramatically improve the realism of a scene.</p>
+
+<h3 id="technical-approach-and-results">Technical Approach and Results</h3>
+
+<h4 id="pathtracing-unit-hemisphere-starcraft-ssao">Pathtracing Unit-Hemisphere (StarCraft) SSAO</h4>
+
+<p class="caption"><img src="./images/pathtracing_ao_m0.7_s8_l128.png" alt="Pathtracing SSAO" class="center-img zoom-img" />
+Pathtracing unit-hemisphere AO with a radius of 0.7, 8 camera rays per pixel, and 128 samples per camera ray.</p>
+
+<p>Here, we see the power of Ambient Occlusion (and also SSAO!).</p>
+
+<p>We see some beautiful soft-shadows simulated by AO, as points on the ground under the sphere have more intersections than the rest of the points. The corners and edges are also darkened, as these have more intersections within a certain radius than other points in the scene.</p>
+
+<p>Compared to the WebGL implementations below, pathtracing AO takes significantly longer (minutes, instead of hundredths of a second) as it's not as parallelized our WebGL implementation.</p>
+
+<p>Perhaps this stark difference will be most obvious as we render scenes with significantly more geometry in <em>real-time</em>, below!</p>
+
+<ul>
+  <li><strong>Problems Encountered:</strong> No standardized distance unit made it difficult to find a good radius for the unit-hemisphere</li>
+  <li><strong>Lessons Learnt:</strong> Pathtracing SSAO is slow and still rather noisy; SSAO works best parallelized. Using actual units for distance can be useful.</li>
+  <li><strong>References:</strong> <a href="http://frederikaalund.com/a-comparative-study-of-screen-space-ambient-occlusion-methods/" title="List of AO Methods">2</a>, <a href="http://john-chapman-graphics.blogspot.nl/2013/01/ssao-tutorial.html" title="Hemisphere AO Overview">3</a></li>
+</ul>
+
+<h4 id="webgl-unit-sphere-cryengine-ssao">WebGL Unit-Sphere (CryEngine) SSAO</h4>
+
+<p class="caption"><img src="./images/ssao_sphere.svg" alt="Unit Sphere SSAO" class="center-img-small" />
+Source: http://frederikaalund.com</p>
+<p>The original implementation of SSAO was done in CryEngine 2. This implementation sampled from a unit sphere about each fragment to check what percentage of samples fell within other geometry.</p>
+
+<canvas id="CECanvas" class="demo-frame"></canvas>
+<div class="center-wrapper">
+    <button class="btn waves-effect waves-light" onclick="switchAnimate('CECanvas')">Play/Pause
+        <i class="material-icons left">play_arrow</i>
+    </button>
+</div>
+
+<p class="caption warning">Blank screen? Press the <strong>play</strong> button above to begin rendering. You can click and drag with your mouse; this is all in real time! Be sure to <strong>pause</strong> when you're done so you don't slow down other GPU-based operations like scrolling!</p>
+
+<p>This scene has been rendered using WebGL through Three.js The camera can be moved by clicking and dragging. Scrolling will change the zoom level. This scene is prepared by rendering in two passes, the first of which calculates the depth buffer for the scene, and the second of which uses that information to compute the desired occlusion at each fragment.</p>
+
+<ul>
+  <li><strong>Problems Encountered</strong>
+    <ol>
+      <li>Incorrectly generate samples uniformly from a unit sphere. Instead sampled from unit cube and normalized. Solution was to rejection sample.</li>
+      <li>At first we used too large of a bias term, which caused a slight highlight to appear on surfaces at an oblique angle to the camera as the depth difference between samples and the z-buffer fluctuated.</li>
+    </ol>
+  </li>
+  <li><strong>Lessons Learnt:</strong> If unexpected changes occur when moving the camera, ensure that all values are stored in the correct coordinate system and are handled accordingly.</li>
+  <li><strong>References:</strong> <a href="http://frederikaalund.com/a-comparative-study-of-screen-space-ambient-occlusion-methods/" title="List of AO Methods">2</a>, <a href="http://ogldev.atspace.co.uk/www/tutorial45/tutorial45.html" title="Sphere AO Overview">5</a></li>
+</ul>
+
+<h4 id="webgl-unit-hemisphere-starcraft-ssao">WebGL Unit-Hemisphere (Starcraft) SSAO</h4>
+
+<p class="caption"><img src="./images/ssao_hemisphere.svg" alt="Unit Hemisphere SSAO" class="center-img-small" />
+Source: http://frederikaalund.com</p>
+
+<p>Though the CryEngine 2 SSAO method was revolutionary for the time, it often resulted in every surface looking somewhat dull. This is because for most surfaces, consider a wall, for example, half of the sphere around that point will fall within its own geometry, resulting in occlusion for surfaces that were out in the open. Starcraft II improved on this method by implementing SSAO such that it used a normal-oriented unit hemisphere instead of a unit sphere, thus eliminating the samples which would be expected to fall within a surface's own geometry.</p>
+
+<canvas id="SCECanvas" class="demo-frame"></canvas>
+<div class="center-wrapper">
+    <button class="btn waves-effect waves-light" onclick="switchAnimate('SCECanvas')">Play/Pause
+        <i class="material-icons left">play_arrow</i>
+    </button>
+</div>
+
+<p>Starcraft II SSAO uses the same shaders as CryEngine 2 SSAO, however the results are noticeably different because the samples passed as uniforms to the shader are modified to fit the specification for this new implementation of SSAO.</p>
+
+<ul>
+  <li><strong>Problems Encountered</strong>
+    <ol>
+      <li>Incorrectly generate samples uniformly from a unit sphere. Instead sampled from unit cube and normalized. Solution was to rejection sample.</li>
+      <li>Using three.js instead of pure WebGL meant that depth had to be prepared differently for the shader, and was stored in a different format. Ultimately solved by doing two render passes, one to compute the depth buffer, and the next to perform the actual shading. Once in the shading pass, depth had to be converted into a format comparable our fragment's z coordinate in view space.</li>
+    </ol>
+  </li>
+  <li><strong>Lessons Learnt:</strong> Set up the environment (in our case three.js) early and get to know it well. Learn from the implementations of many others.  Don't rely on a single source.</li>
+  <li><strong>References:</strong> <a href="http://john-chapman-graphics.blogspot.nl/2013/01/ssao-tutorial.html" title="Hemisphere AO Overview">3</a>, <a href="https://learnopengl.com/Advanced-Lighting/SSAO" title="Hemisphere AO Overview (Alternative)">4</a></li>
+</ul>
+
+<h4 id="webgl-horizon-based-ssao-hbao">WebGL Horizon-Based SSAO (HBAO)</h4>
+
+<p class="caption"><img src="./images/ssao_horizon.svg" alt="Horizon SSAO" class="center-img-small" />
+Source: http://frederikaalund.com</p>
+
+<p>While the first two SSAO methods sample points and check whether or not they are obscured in screen space, HBAO computes occlusion by estimating the horizon angle of a fragment. The horizon angle along a particular direction is the steepest angle within a certain range that encounters geometry. Consider the analogy of a horizon in the real world. The angle between the ground and the vector between your position and a nearby mountain range can be used to describe what percentage of the sky is unblocked, which in turn can inform how much light from the sky is able to reach your position.</p>
+
+<canvas id="HBAOCanvas" class="demo-frame"></canvas>
+<div class="center-wrapper">
+    <button class="btn waves-effect waves-light" onclick="switchAnimate('HBAOCanvas')">Play/Pause
+        <i class="material-icons left">play_arrow</i>
+    </button>
+</div>
+
+<ul>
+  <li><strong>Problems Encountered:</strong> Encountered serious difficulties attempting to combine screen space coordinates and depth to yield a view space coordinate. This was particularly difficult because three.js did not detail what its depth value represented, saying only that it took on a value between 0 and 1. We were eventually able to find a third party explanation and use that to figure out a way to correctly convert to view space.</li>
+  <li><strong>Lessons Learnt:</strong> Perform as much computation as possible before applying shaders. Don't be shy about storing many values in uniforms. HBAO is effective, but has enough computation to noticeably impact performance.</li>
+  <li><strong>References:</strong> <a href="http://developer.download.nvidia.com/presentations/2008/SIGGRAPH/HBAO_SIG08b.pdf" title="NVIDIA Presentation on Horizon-Based AO">1</a>, <a href="http://frederikaalund.com/a-comparative-study-of-screen-space-ambient-occlusion-methods/" title="List of AO Methods">2</a></li>
+</ul>
+
+<h3 id="references">References</h3>
+
+<ol>
+  <li>
+    <p><a href="http://developer.download.nvidia.com/presentations/2008/SIGGRAPH/HBAO_SIG08b.pdf" title="NVIDIA Presentation on Horizon-Based AO"><strong>NVIDIA Presentation on Horizon-Based AO</strong></a></p>
+  </li>
+  <li>
+    <p><a href="http://frederikaalund.com/a-comparative-study-of-screen-space-ambient-occlusion-methods/" title="List of AO Methods"><strong>List of AO Methods</strong></a></p>
+  </li>
+  <li>
+    <p><a href="http://john-chapman-graphics.blogspot.nl/2013/01/ssao-tutorial.html" title="Hemisphere AO Overview"><strong>Hemisphere AO Overview</strong></a></p>
+  </li>
+  <li>
+    <p><a href="https://learnopengl.com/Advanced-Lighting/SSAO" title="Hemisphere AO Overview (Alternative)"><strong>Hemisphere AO Overview (Alternative)</strong></a></p>
+  </li>
+  <li>
+    <p><a href="http://ogldev.atspace.co.uk/www/tutorial45/tutorial45.html" title="Sphere AO Overview"><strong>Sphere AO Overview</strong></a></p>
+  </li>
+</ol>
